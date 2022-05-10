@@ -1,22 +1,23 @@
-import os
 import argparse
+import glob
 import json
+import os
 import pathlib
 
-from labelme import utils
 import numpy as np
-import glob
 import PIL.Image
+from labelme import utils
 
 
 class labelme2coco(object):
-    def __init__(self, labelme_json=[], save_json_path="./coco.json"):
+    def __init__(self, labelme_json=[], save_json_path="./coco.json", config_path=""):
         """
         :param labelme_json: the list of all labelme json file paths
         :param save_json_path: the path to save new json
         """
         self.labelme_json = labelme_json
         self.save_json_path = save_json_path
+        self.config_path = config_path
         self.images = []
         self.categories = []
         self.annotations = []
@@ -153,6 +154,47 @@ class labelme2coco(object):
         with open(parent/'classes.txt', 'w') as f:
             f.write('\n'.join([l[0] for l in self.label]))
 
+        if self.config_path:
+            classes_str = 'AUTO_GENERATED_CLASSES = ('
+            for l in self.label:
+                classes_str += f"'{l[0]}',\n"
+            classes_str += ')\n'
+
+            dict_str = """
+                'name': '{0} dataset',
+
+                # Training images and annotations
+                'train_images': './{0}/train_data',
+                'train_info':   './{0}/instances.json',
+
+                # Validation images and annotations.
+                'valid_images': './{0}/train_data',
+                'valid_info':   './{0}/instances.json',
+
+                # Whether or not to load GT. If this is False, eval.py quantitative evaluation won't work.
+                'has_gt': True,
+
+                # A list of names for each of you classes.
+                'class_names': AUTO_GENERATED_CLASSES,
+
+                # COCO class ids aren't sequential, so this is a bandage fix. If your ids aren't sequential,
+                # provide a map from category_id -> index in class_names + 1 (the +1 is there because it's 1-indexed).
+                # If not specified, this just assumes category ids start at 1 and increase sequentially.
+                'label_map': None
+            """.format(parent.name)
+            dataset_str = '{}_dataset = dataset_base.copy('.format(parent.name)+'{'+dict_str+'})\n'
+
+            dict_str = """
+                'name': 'yolact_plus_{0}',
+
+                # Dataset stuff
+                'dataset': {0}_dataset,
+                'num_classes': len({0}_dataset.class_names) + 1,
+            """.format(parent.name)
+            config_str = 'yolact_plus_{}_config = yolact_plus_resnet50_config.copy('.format(parent.name)+'{'+dict_str+'})\n'
+
+            with open(self.config_path, 'a') as f:
+                f.write(classes_str+dataset_str+config_str)
 
 if __name__ == "__main__":
     import argparse
@@ -166,8 +208,13 @@ if __name__ == "__main__":
         type=str,
     )
     parser.add_argument(
+        "--config",
+        help="Directory to yolact config path.",
+        default=""
+    )
+    parser.add_argument(
         "--output", help="Output json file path.", default="trainval.json"
     )
     args = parser.parse_args()
     labelme_json = glob.glob(os.path.join(args.labelme_images, "*.json"))
-    labelme2coco(labelme_json, args.output)
+    labelme2coco(labelme_json, args.output, args.config)
