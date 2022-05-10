@@ -29,15 +29,18 @@ class labelme2coco(object):
     def data_transfer(self):
         for num, json_file in enumerate(self.labelme_json):
             with open(json_file, "r") as fp:
-                data = json.load(fp)
-                self.images.append(self.image(data, num))
-                for shapes in data["shapes"]:
-                    label = shapes["label"].split("_")
-                    if label not in self.label:
-                        self.label.append(label)
-                    points = shapes["points"]
-                    self.annotations.append(self.annotation(points, label, num))
-                    self.annID += 1
+                try:
+                    data = json.load(fp)
+                    self.images.append(self.image(data, num))
+                    for shapes in data["shapes"]:
+                        label = shapes["label"].split("_")
+                        if label not in self.label:
+                            self.label.append(label)
+                        points = shapes["points"]
+                        self.annotations.append(self.annotation(points, label, num))
+                        self.annID += 1
+                except:
+                    pass
 
         # Sort all text labels so they are in the same order across data splits.
         self.label.sort()
