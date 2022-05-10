@@ -1,6 +1,7 @@
 import os
 import argparse
 import json
+import pathlib
 
 from labelme import utils
 import numpy as np
@@ -145,6 +146,12 @@ class labelme2coco(object):
             os.path.dirname(os.path.abspath(self.save_json_path)), exist_ok=True
         )
         json.dump(self.data_coco, open(self.save_json_path, "w"), indent=4)
+        parent = pathlib.Path(self.save_json_path).parent
+        image_paths = [str(path.relative_to(parent)) for path in (parent/'train_data').glob('*.jpg')]
+        with open(parent/'train.txt', 'w') as f:
+            f.write('\n'.join(image_paths))
+        with open(parent/'classes.txt', 'w') as f:
+            f.write('\n'.join([l[0] for l in self.label]))
 
 
 if __name__ == "__main__":
