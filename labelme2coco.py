@@ -155,7 +155,7 @@ class labelme2coco(object):
             f.write('\n'.join([l[0] for l in self.label]))
 
         if self.config_path:
-            classes_str = 'AUTO_GENERATED_CLASSES = ('
+            classes_str = '{}_CLASSES = ('.format(parent.name)
             for l in self.label:
                 classes_str += f"'{l[0]}',\n"
             classes_str += ')\n'
@@ -164,18 +164,18 @@ class labelme2coco(object):
                 'name': '{0} dataset',
 
                 # Training images and annotations
-                'train_images': './{0}/train_data',
+                'train_images': './{0}/',
                 'train_info':   './{0}/instances.json',
 
                 # Validation images and annotations.
-                'valid_images': './{0}/train_data',
+                'valid_images': './{0}/',
                 'valid_info':   './{0}/instances.json',
 
                 # Whether or not to load GT. If this is False, eval.py quantitative evaluation won't work.
                 'has_gt': True,
 
                 # A list of names for each of you classes.
-                'class_names': AUTO_GENERATED_CLASSES,
+                'class_names': {0}_CLASSES,
 
                 # COCO class ids aren't sequential, so this is a bandage fix. If your ids aren't sequential,
                 # provide a map from category_id -> index in class_names + 1 (the +1 is there because it's 1-indexed).
