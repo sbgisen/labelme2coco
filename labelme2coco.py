@@ -155,6 +155,19 @@ class labelme2coco(object):
             f.write('\n'.join([l[0] for l in self.label]))
 
         if self.config_path:
+            context = []
+            with open(self.config_path, 'r') as f:
+                is_remove = False
+                for line in f.readlines():
+                    if line == f'# -----start {parent.name}-----\n':
+                        is_remove = True
+                    elif line == f'# -----end {parent.name}-----\n':
+                        is_remove = False
+                    elif not is_remove:
+                        context.append(line)
+
+            prefix = f'# -----start {parent.name}-----\n'
+            suffix = f'# -----end {parent.name}-----\n'
             classes_str = '{}_CLASSES = ('.format(parent.name)
             for l in self.label:
                 classes_str += f"'{l[0]}',\n"
@@ -193,8 +206,8 @@ class labelme2coco(object):
             """.format(parent.name)
             config_str = 'yolact_plus_{}_config = yolact_plus_resnet50_config.copy('.format(parent.name)+'{'+dict_str+'})\n'
 
-            with open(self.config_path, 'a') as f:
-                f.write(classes_str+dataset_str+config_str)
+            with open(self.config_path, 'w') as f:
+                f.write(''.join(context)+prefix+classes_str+dataset_str+config_str+suffix)
 
 if __name__ == "__main__":
     import argparse
