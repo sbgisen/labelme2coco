@@ -35,7 +35,7 @@ class labelme2coco(object):
                     data = json.load(fp)
                     self.images.append(self.image(data, num))
                     for shapes in data["shapes"]:
-                        label = shapes["label"].split("_")
+                        label = shapes["label"]
                         if label not in self.label:
                             self.label.append(label)
                         points = shapes["points"]
@@ -68,9 +68,9 @@ class labelme2coco(object):
 
     def category(self, label):
         category = {}
-        category["supercategory"] = label[0]
+        category["supercategory"] = label
         category["id"] = len(self.categories)
-        category["name"] = label[0]
+        category["name"] = label
         return category
 
     def annotation(self, points, label, num):
@@ -86,7 +86,7 @@ class labelme2coco(object):
 
         annotation["bbox"] = list(map(float, self.getbbox(points)))
 
-        annotation["category_id"] = label[0]  # self.getcatid(label)
+        annotation["category_id"] = label  # self.getcatid(label)
         annotation["id"] = self.annID
         return annotation
 
@@ -152,7 +152,7 @@ class labelme2coco(object):
         with open(parent/'train.txt', 'w') as f:
             f.write('\n'.join(image_paths))
         with open(parent/'classes.txt', 'w') as f:
-            f.write('\n'.join([l[0] for l in self.label]))
+            f.write('\n'.join(self.label))
 
         if self.config_path:
             context = []
