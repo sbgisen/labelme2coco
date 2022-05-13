@@ -69,7 +69,7 @@ class labelme2coco(object):
     def category(self, label):
         category = {}
         category["supercategory"] = label
-        category["id"] = len(self.categories)
+        category["id"] = len(self.categories) + 1
         category["name"] = label
         return category
 
