@@ -149,6 +149,8 @@ class labelme2coco(object):
         json.dump(self.data_coco, open(self.save_json_path, "w"), indent=4)
         parent = pathlib.Path(self.save_json_path).parent
         image_paths = [str(path.relative_to(parent)) for path in (parent/'train_data').glob('*.jpg')]
+        # dataset_path (e.g.) custom_dataset/robocup_dataset
+        dataset_path = str(parent).split('/yolact/')[1]
         with open(parent/'train.txt', 'w') as f:
             f.write('\n'.join(image_paths))
         with open(parent/'classes.txt', 'w') as f:
@@ -177,12 +179,12 @@ class labelme2coco(object):
                 'name': '{0} dataset',
 
                 # Training images and annotations
-                'train_images': './{0}/',
-                'train_info':   './{0}/instances.json',
+                'train_images': './{1}/',
+                'train_info':   './{1}/instances.json',
 
                 # Validation images and annotations.
-                'valid_images': './{0}/',
-                'valid_info':   './{0}/instances.json',
+                'valid_images': './{1}/',
+                'valid_info':   './{1}/instances.json',
 
                 # Whether or not to load GT. If this is False, eval.py quantitative evaluation won't work.
                 'has_gt': True,
@@ -194,7 +196,7 @@ class labelme2coco(object):
                 # provide a map from category_id -> index in class_names + 1 (the +1 is there because it's 1-indexed).
                 # If not specified, this just assumes category ids start at 1 and increase sequentially.
                 'label_map': None
-            """.format(parent.name)
+            """.format(parent.name, dataset_path)
             dataset_str = '{}_dataset = dataset_base.copy('.format(parent.name)+'{'+dict_str+'})\n'
 
             dict_str = """
