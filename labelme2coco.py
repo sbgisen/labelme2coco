@@ -39,7 +39,8 @@ class labelme2coco(object):
                         if label not in self.label:
                             self.label.append(label)
                         points = shapes["points"]
-                        self.annotations.append(self.annotation(points, label, num))
+                        self.annotations.append(
+                            self.annotation(points, label, num))
                         self.annID += 1
                 except:
                     pass
@@ -49,7 +50,8 @@ class labelme2coco(object):
         for label in self.label:
             self.categories.append(self.category(label))
         for annotation in self.annotations:
-            annotation["category_id"] = self.getcatid(annotation["category_id"])
+            annotation["category_id"] = self.getcatid(
+                annotation["category_id"])
 
     def image(self, data, num):
         image = {}
@@ -78,7 +80,8 @@ class labelme2coco(object):
         contour = np.array(points)
         x = contour[:, 0]
         y = contour[:, 1]
-        area = 0.5 * np.abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))
+        area = 0.5 * np.abs(np.dot(x, np.roll(y, 1)) -
+                            np.dot(y, np.roll(x, 1)))
         annotation["segmentation"] = [list(np.asarray(points).flatten())]
         annotation["iscrowd"] = 0
         annotation["area"] = area
@@ -148,9 +151,10 @@ class labelme2coco(object):
         )
         json.dump(self.data_coco, open(self.save_json_path, "w"), indent=4)
         parent = pathlib.Path(self.save_json_path).parent
-        image_paths = [str(path.relative_to(parent)) for path in (parent/'train_data').glob('*.jpg')]
+        image_paths = [str(path.relative_to(parent))
+                       for path in (parent/'train_data').glob('*.jpg')]
         # dataset_path (e.g.) custom_dataset/robocup_dataset
-        dataset_path = str(parent).split('/yolact/')[1]
+        dataset_path = str(parent.relative_to(parent.parent.parent))
         with open(parent/'train.txt', 'w') as f:
             f.write('\n'.join(image_paths))
         with open(parent/'classes.txt', 'w') as f:
@@ -171,10 +175,10 @@ class labelme2coco(object):
             prefix = f'# -----start {parent.name}-----\n'
             suffix = f'# -----end {parent.name}-----\n'
             classes_str = '{}_CLASSES = ('.format(parent.name)
-            for l in self.label:
-                classes_str += f"'{l[0]}',\n"
-            classes_str += ')\n'
 
+            for l in self.label:
+                classes_str += f"'{l}',\n"
+            classes_str += ')\n'
             dict_str = """
                 'name': '{0} dataset',
 
@@ -197,7 +201,8 @@ class labelme2coco(object):
                 # If not specified, this just assumes category ids start at 1 and increase sequentially.
                 'label_map': None
             """.format(parent.name, dataset_path)
-            dataset_str = '{}_dataset = dataset_base.copy('.format(parent.name)+'{'+dict_str+'})\n'
+            dataset_str = '{}_dataset = dataset_base.copy('.format(
+                parent.name)+'{'+dict_str+'})\n'
 
             dict_str = """
                 'name': 'yolact_plus_{0}',
@@ -206,10 +211,13 @@ class labelme2coco(object):
                 'dataset': {0}_dataset,
                 'num_classes': len({0}_dataset.class_names) + 1,
             """.format(parent.name)
-            config_str = 'yolact_plus_{}_config = yolact_plus_resnet50_config.copy('.format(parent.name)+'{'+dict_str+'})\n'
+            config_str = 'yolact_plus_{}_config = yolact_plus_resnet50_config.copy('.format(
+                parent.name)+'{'+dict_str+'})\n'
 
             with open(self.config_path, 'w') as f:
-                f.write(''.join(context)+prefix+classes_str+dataset_str+config_str+suffix)
+                f.write(''.join(context)+prefix+classes_str +
+                        dataset_str+config_str+suffix)
+
 
 if __name__ == "__main__":
     import argparse
