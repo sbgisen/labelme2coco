@@ -67,7 +67,7 @@ class labelme2coco(object):
         image["height"] = height
         image["width"] = width
         image["id"] = num
-        image["file_name"] = data["imagePath"].split("/")[-1]
+        image["file_name"] = data["imagePath"]
 
         self.height = height
         self.width = width
