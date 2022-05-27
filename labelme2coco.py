@@ -34,13 +34,19 @@ class labelme2coco(object):
                 try:
                     data = json.load(fp)
                     self.images.append(self.image(data, num))
+                    start = len(self.annotations)
+                    ids = []
                     for shapes in data["shapes"]:
                         label = shapes["label"]
                         if label not in self.label:
                             self.label.append(label)
                         points = shapes["points"]
-                        self.annotations.append(
-                            self.annotation(points, label, num))
+                        group_id = shapes.get("group_id")
+                        if group_id is not None and group_id in ids:
+                            self.add(points, label, num, self.annotations[start + ids.index(group_id)])
+                        else:
+                            self.annotations.append(self.annotation(points, label, num, None))
+                            ids.append(group_id)
                         self.annID += 1
                 except:
                     pass
@@ -61,7 +67,7 @@ class labelme2coco(object):
         image["height"] = height
         image["width"] = width
         image["id"] = num
-        image["file_name"] = data["imagePath"].split("/")[-1]
+        image["file_name"] = data["imagePath"]
 
         self.height = height
         self.width = width
@@ -75,7 +81,25 @@ class labelme2coco(object):
         category["name"] = label
         return category
 
-    def annotation(self, points, label, num):
+    def add(self, points, label, num, ann):
+        contour = np.array(points)
+        x = contour[:, 0]
+        y = contour[:, 1]
+        area = 0.5 * np.abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))
+        ann["segmentation"] += [list(np.asarray(points).flatten())]
+        ann["area"] = ann["area"] + area
+
+        bbox = list(map(float, self.getbbox(points)))
+        right1 = ann["bbox"][0] + ann["bbox"][2]
+        right2 = bbox[0] + bbox[2]
+        bottom1 = ann["bbox"][1] + ann["bbox"][3]
+        bottom2 = bbox[1] + bbox[3]
+        ann["bbox"][0] = min(bbox[0], ann["bbox"][0])
+        ann["bbox"][1] = min(bbox[1], ann["bbox"][1])
+        ann["bbox"][2] = max(right1, right2) - ann["bbox"][0]
+        ann["bbox"][3] = max(bottom1, bottom2) - ann["bbox"][1]
+
+    def annotation(self, points, label, num, ann):
         annotation = {}
         contour = np.array(points)
         x = contour[:, 0]
